@@ -4,8 +4,6 @@ Syntax sugar for [react-hook-form](https://react-hook-form.com/) to make it easi
 
 [Try it on StackBlitz](https://stackblitz.com/edit/hookform-controller-proxy)
 
-> Heads up: This package does not follow semantic versioning. Changes of all types are released to the patch portion of the version string.
-
 ```tsx
 import { useForm } from "react-hook-form";
 import type { FieldProps } from "hookform-controller-proxy";
