@@ -1,6 +1,6 @@
 {
   "name": "hookform-controller-proxy",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "sideEffects": false,
   "license": "MIT",
   "repository": {
@@ -8,6 +8,7 @@
     "url": "git+https://github.com/kasper573/hookform-controller-proxy.git"
   },
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist"

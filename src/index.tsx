@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useReducer, useState, type ReactElement } from "react";
 import type { Path, PathValue } from "react-hook-form";
 import {
   type FieldErrors,
@@ -61,13 +61,12 @@ export function FieldController<
 }) {
   const { errors, isValid } = useFormState({ control: form.control, name });
   const error = !isValid ? flattenErrors(errors) : undefined;
-  const [value, setValue] = useState(form.getValues(name));
-
+  const [, forceUpdate] = useReducer((n) => n + 1, 0);
+  const value = form.getValues(name);
   useEffect(() => {
-    const sub = form.watch(() => {
-      const newValue = form.getValues(name);
-      if (newValue !== value) {
-        setValue(newValue);
+    const sub = form.watch((_, changed) => {
+      if (changed.name === name || changed.name?.startsWith(`${name}.`)) {
+        forceUpdate();
       }
     });
     return () => sub.unsubscribe();
