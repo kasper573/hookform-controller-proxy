@@ -1,4 +1,4 @@
-import { type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import type { Path, PathValue } from "react-hook-form";
 import {
   type FieldErrors,
@@ -61,7 +61,18 @@ export function FieldController<
 }) {
   const { errors, isValid } = useFormState({ control: form.control, name });
   const error = !isValid ? flattenErrors(errors) : undefined;
-  const value = form.watch(name);
+  const [value, setValue] = useState(form.getValues(name));
+
+  useEffect(() => {
+    const sub = form.watch(() => {
+      const newValue = form.getValues(name);
+      if (newValue !== value) {
+        setValue(newValue);
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
+
   const reg = form.control.register(name);
 
   const onBlur = () => reg.onBlur({ type: "blur", target: { value, name } });
