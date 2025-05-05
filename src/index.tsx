@@ -1,4 +1,10 @@
-import { useEffect, useReducer, useState, type ReactElement } from "react";
+import {
+  createElement,
+  useEffect,
+  useReducer,
+  useState,
+  type ReactElement,
+} from "react";
 import type { Path, PathValue } from "react-hook-form";
 import {
   type FieldErrors,
@@ -6,6 +12,7 @@ import {
   type FieldValues,
   type UseFormReturn,
   useFormState,
+  Controller,
 } from "react-hook-form";
 
 export function createControllerProxy<TFieldValues extends FieldValues>(
@@ -40,10 +47,10 @@ function createControllerProxyImpl<TFieldValues extends FieldValues>(
 }
 
 /**
- * Identical to react-hook-form's Controller component, with a few exceptions:
+ * Identical to react-hook-form's Controller component except:
+ * 1. onChange is a value setter instead of event handler
+ * 2. resolves the field state into an error string (or undefined if valid)
  *
- * - Subscribes to nested fields when the name is not referring to a leaf field.
- * - Flattens nested errors to a single string.
  */
 export function FieldController<
   TFieldValues extends FieldValues,
@@ -59,34 +66,27 @@ export function FieldController<
   render: FieldRenderer<PathValue<TFieldValues, Name>>;
   required?: boolean;
 }) {
-  const { errors, isValid } = useFormState({ control: form.control, name });
-  const error = !isValid ? flattenErrors(errors) : undefined;
-  const [, forceUpdate] = useReducer((n) => n + 1, 0);
-  const value = form.getValues(name);
-  useEffect(() => {
-    const sub = form.watch((_, changed) => {
-      if (changed.name === name || changed.name?.startsWith(`${name}.`)) {
-        forceUpdate();
+  return (
+    <Controller
+      control={form.control}
+      name={name}
+      rules={{ required }}
+      render={({
+        field: { value, onChange, onBlur },
+        fieldState: { invalid, error },
+      }) =>
+        render({
+          value,
+          name,
+          onBlur,
+          onChange: (newValue: unknown) =>
+            onChange({ type: "change", target: { value: newValue, name } }),
+          error: invalid ? flattenErrors(error) : undefined,
+          required,
+        })
       }
-    });
-    return () => sub.unsubscribe();
-  }, [form]);
-
-  const reg = form.control.register(name);
-
-  const onBlur = () => reg.onBlur({ type: "blur", target: { value, name } });
-
-  const onChange = (value?: PathValue<TFieldValues, Name>) =>
-    reg.onChange({ type: "change", target: { value, name } });
-
-  return render({
-    value,
-    name,
-    onChange,
-    onBlur,
-    error,
-    required,
-  });
+    />
+  );
 }
 
 const optionalIndicator = "$" as const;
